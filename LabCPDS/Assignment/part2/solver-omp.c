@@ -96,16 +96,15 @@ double relax_gauss (double *u, unsigned sizex, unsigned sizey)
     nby = NB;
     by = sizey/nby;
 
-    int blocksfinished[NB] ={0};
+    int blocksfinished[NB] = {0};
     for(int i = 0; i < NB; ++i)
-	blocksfinished[i] = 0;
+	    blocksfinished[i] = 0;
 
     #pragma omp parallel for shared(u) private(diff, unew) reduction(+:sum)
     for (int ii=0; ii<nbx; ii++){
         for (int jj=0; jj<nby; jj++){
         	if(ii > 0){
-                while(blocksFinished[ii-1] <= jj)
-                {
+                while(blocksfinished[ii-1] <= jj){
                     #pragma omp flush
                 }
             }
@@ -118,10 +117,10 @@ double relax_gauss (double *u, unsigned sizex, unsigned sizey)
 	            diff = unew - u[i*sizey+ j];
 	            sum += diff * diff; 
 	            u[i*sizey+j]=unew;
-                blocksfinished[i]++;
-                #pragma omp flush
                 }
             }
+            #pragma omp flush
+            blocksfinished[ii]++;
         }
     }
     return sum;
