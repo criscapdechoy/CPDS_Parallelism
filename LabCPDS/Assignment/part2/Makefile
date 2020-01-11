@@ -1,4 +1,4 @@
-CC     =  icc 
+CC     =  gcc 
 
 OPT3 	= -O3
 CFLAGS  = -Wall -std=c99

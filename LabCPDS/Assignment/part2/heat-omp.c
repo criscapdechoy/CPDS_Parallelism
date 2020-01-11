@@ -92,7 +92,8 @@ int main( int argc, char *argv[] )
     while(1) {
 	switch( param.algorithm ) {
 	    case 0: // JACOBI
-	            residual = relax_jacobi(param.u, param.uhelp, np, np);
+        
+	        residual = relax_jacobi(param.u, param.uhelp, np, np);
 		    // Copy uhelp into u
 		    for (int i=0; i<np; i++)
     		        for (int j=0; j<np; j++)

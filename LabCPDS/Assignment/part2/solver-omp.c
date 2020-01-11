@@ -1,4 +1,5 @@
 #include "heat.h"
+#include "omp.h"
 
 #define NB 8
 
@@ -16,18 +17,20 @@ double relax_jacobi (double *u, double *utmp, unsigned sizex, unsigned sizey)
     bx = sizex/nbx;
     nby = NB;
     by = sizey/nby;
+    
+    #pragma omp parallel for shared(u, utmp) private(diff) reduction(+:sum)
     for (int ii=0; ii<nbx; ii++)
         for (int jj=0; jj<nby; jj++) 
             for (int i=1+ii*bx; i<=min((ii+1)*bx, sizex-2); i++) 
                 for (int j=1+jj*by; j<=min((jj+1)*by, sizey-2); j++) {
-	            utmp[i*sizey+j]= 0.25 * (u[ i*sizey     + (j-1) ]+  // left
-					     u[ i*sizey     + (j+1) ]+  // right
-				             u[ (i-1)*sizey + j     ]+  // top
-				             u[ (i+1)*sizey + j     ]); // bottom
+	                utmp[i*sizey+j]= 0.25 * (u[ i*sizey     + (j-1) ]+  // left
+					u[ i*sizey     + (j+1) ]+  // right
+				    u[ (i-1)*sizey + j     ]+  // top
+				    u[ (i+1)*sizey + j     ]); // bottom
 	            diff = utmp[i*sizey+j] - u[i*sizey + j];
 	            sum += diff * diff; 
 	        }
-
+    
     return sum;
 }
 
@@ -45,6 +48,7 @@ double relax_redblack (double *u, unsigned sizex, unsigned sizey)
     nby = NB;
     by = sizey/nby;
     // Computing "Red" blocks
+    #pragma omp parallel for shared(u) private(diff, unew, lsw) reduction(+:sum)
     for (int ii=0; ii<nbx; ii++) {
         lsw = ii%2;
         for (int jj=lsw; jj<nby; jj=jj+2) 
@@ -59,8 +63,8 @@ double relax_redblack (double *u, unsigned sizex, unsigned sizey)
 	            u[i*sizey+j]=unew;
 	        }
     }
-
     // Computing "Black" blocks
+    #pragma omp parallel for shared(u) private(diff, unew, lsw) reduction(+:sum)
     for (int ii=0; ii<nbx; ii++) {
         lsw = (ii+1)%2;
         for (int jj=lsw; jj<nby; jj=jj+2) 
@@ -91,19 +95,35 @@ double relax_gauss (double *u, unsigned sizex, unsigned sizey)
     bx = sizex/nbx;
     nby = NB;
     by = sizey/nby;
-    for (int ii=0; ii<nbx; ii++)
-        for (int jj=0; jj<nby; jj++) 
-            for (int i=1+ii*bx; i<=min((ii+1)*bx, sizex-2); i++) 
+
+    int blocksfinished[NB] ={0};
+    for(int i = 0; i < NB; ++i)
+	blocksfinished[i] = 0;
+
+    #pragma omp parallel for shared(u) private(diff, unew) reduction(+:sum)
+    for (int ii=0; ii<nbx; ii++){
+        for (int jj=0; jj<nby; jj++){
+        	if(ii > 0){
+                while(blocksFinished[ii-1] <= jj)
+                {
+                    #pragma omp flush
+                }
+            }
+            for (int i=1+ii*bx; i<=min((ii+1)*bx, sizex-2); i++){
                 for (int j=1+jj*by; j<=min((jj+1)*by, sizey-2); j++) {
-	            unew= 0.25 * (    u[ i*sizey	+ (j-1) ]+  // left
-				      u[ i*sizey	+ (j+1) ]+  // right
-				      u[ (i-1)*sizey	+ j     ]+  // top
-				      u[ (i+1)*sizey	+ j     ]); // bottom
+	                unew= 0.25 * (    u[ i*sizey	+ (j-1) ]+  // left
+				    u[ i*sizey	+ (j+1) ]+  // right
+				    u[ (i-1)*sizey	+ j     ]+  // top
+				    u[ (i+1)*sizey	+ j     ]); // bottom
 	            diff = unew - u[i*sizey+ j];
 	            sum += diff * diff; 
 	            u[i*sizey+j]=unew;
+                blocksfinished[i]++;
+                #pragma omp flush
                 }
-
+            }
+        }
+    }
     return sum;
 }
-
+	        
