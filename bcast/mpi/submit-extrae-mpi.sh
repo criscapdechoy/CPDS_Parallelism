@@ -10,12 +10,12 @@
 	# @ wall_clock_limit	= 00:02:00
 
 prog=heatmpi
+procs=4
 
-srun -n 1 ./$prog test.dat
-srun -n 2 ./$prog test.dat
-srun -n 4 ./$prog test.dat
-srun -n 6 ./$prog test.dat
-srun -n 8 ./$prog test.dat
-srun -n 10 ./$prog test.dat
-srun -n 12 ./$prog test.dat
+export EXTRAE_CONFIG_FILE=extrae.xml
+source ${EXTRAE_HOME}/etc/extrae.sh
+export LD_PRELOAD=${EXTRAE_HOME}/lib/libmpitrace.so
+
+srun -n $procs ./$prog test.dat
+srun ${EXTRAE_HOME}/bin/extrae -v ./$prog test.dat
 
