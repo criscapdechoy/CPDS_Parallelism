@@ -19,6 +19,7 @@ typedef struct {
     unsigned visres;        // visualization resolution
   
     float *u, *uhelp;
+    float *g_idata, *g_odata;
     float *uvis;
 
     unsigned   numsrcs;     // number of heat sources
@@ -35,10 +36,9 @@ void write_image( FILE * f, float *u,
 int coarsen(float *uold, unsigned oldx, unsigned oldy ,
 	    float *unew, unsigned newx, unsigned newy );
 
-// Global functions 
-__global__ void gpu_Heat (float *u, float *utmp, float *residual,int N);
-// Add reduction NEW
-__global__ void gpu_ResidualReduction (float *res, float *res1);
+__global__ void gpu_Heat (float *h, float *g, float *ls, int N);
+__global__ void gpu_reduction(float *res, float *res1);
+
 
 #define NB 8
 #define min(a,b) ( ((a) < (b)) ? (a) : (b) )
@@ -158,22 +158,22 @@ int main( int argc, char *argv[] ) {
 
     // starting time
     float elapsed_time_ms;       	// which is applicable for asynchronous code also
-    cudaEvent_t start, stop;     	// using cuda events to measure time
+    float elapsed_time_ms_gpu;
+    cudaEvent_t start, stop, start_gpu, stop_gpu;     	// using cuda events to measure time
+    
     cudaEventCreate( &start );     // instrument code to measure start time
     cudaEventCreate( &stop );
+
     cudaEventRecord( start, 0 );
     cudaEventSynchronize( start );
 
     iter = 0;
     float residual;
     while(1) {
-	residual = cpu_jacobi(param.u, param.uhelp, np, np);
-	float * tmp = param.u;
-	param.u = param.uhelp;
-    param.uhelp = tmp;
-    // Residual CPU
-	//residual = cpu_residual (param.u, param.uhelp, np, np);
-    //printf("residual: %.6f \n", residual);
+		residual = cpu_jacobi(param.u, param.uhelp, np, np);
+		float * tmp = param.u;
+		param.u = param.uhelp;
+		param.uhelp = tmp;
 
         iter++;
 
@@ -197,9 +197,36 @@ int main( int argc, char *argv[] ) {
 	    flop/elapsed_time_ms/1000);
     fprintf(stdout, "Convergence to residual=%f: %d iterations\n", residual, iter);
 
+      // for plot...
+    coarsen( param.u, np, np,
+	     param.uvis, param.visres+2, param.visres+2 );
+  
+    write_image( resfile, param.uvis,  
+		 param.visres+2, 
+		 param.visres+2 );
+
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
+
     finalize( &param );
 
+	// END CPU CODE ------------------------------------------
+    
+    resfilename="heat_cuda.ppm";
+
+    if( !(resfile=fopen(resfilename, "w")) ) {
+	fprintf(stderr, 
+		"\nError: Cannot open \"%s\" for writing.\n\n", 
+		resfilename);
+	usage(argv[0]);
+	return 1;
+    }
+
+
     fprintf(stdout, "\nExecution on GPU\n----------------\n");
+    cudaDeviceProp prop;
+	cudaGetDeviceProperties(&prop, 0);
+	printf("Using device: %s\n", prop.name);
     fprintf(stderr, "Number of threads per block in each dimension = %d\n", Block_Dim);
     fprintf(stderr, "Number of blocks per grid in each dimension   = %d\n", Grid_Dim);
 
@@ -213,83 +240,72 @@ int main( int argc, char *argv[] ) {
     dim3 Block(Block_Dim, Block_Dim);
     
     // starting time
-    cudaEventRecord( start, 0 );
-    cudaEventSynchronize( start );
+    cudaEventCreate( &start_gpu );     // instrument code to measure start time
+    cudaEventCreate( &stop_gpu );
+    cudaEventRecord( start_gpu, 0 );
+    cudaEventSynchronize( start_gpu );
 
-    float *dev_u, *dev_uhelp, *dev_res, *res, *result, *dev_result;
-	res = (float*)calloc(sizeof(float), np*np);
-    result = (float*)calloc(sizeof(float), np);
-    
-    // TODO: Allocation on GPU for matrices u and uhelp
-    cudaMalloc( &dev_u, sizeof(float)*(np*np));
-    cudaMalloc( &dev_uhelp, sizeof(float)*(np*np));
-    cudaMalloc( &dev_res, sizeof(float)*(np*np));
-    cudaMalloc( &dev_result, sizeof(float)*np);
-    
-    // TODO: Copy initial values in u and uhelp from host to GPU
-    cudaMemcpy( dev_u,param.u, sizeof(float)*(np*np), cudaMemcpyHostToDevice);
-    cudaMemcpy( dev_uhelp, param.uhelp, sizeof(float)*(np*np), cudaMemcpyHostToDevice);
-    cudaMemcpy( dev_res, res, sizeof(float)*(np*np), cudaMemcpyHostToDevice);
-    cudaMemcpy( dev_result, result, sizeof(float)*(np), cudaMemcpyHostToDevice); 
-  
-    
+    float *dev_u, *dev_uhelp, *dev_g_idata, *dev_g_odata;
+
+    // Initialize
+    // VORI: Allocation on GPU for matrices u and uhelp
+    cudaMalloc(&dev_u, np*np*sizeof(float));
+    cudaMalloc(&dev_uhelp, np*np*sizeof(float));
+    cudaMalloc(&dev_g_idata, np*np*sizeof(float));
+    cudaMalloc(&dev_g_odata, np*sizeof(float));
+
+
+    // VORI:  Copy initial values in u and uhelp from host to GPU
+    cudaMemcpy(dev_u, param.u, np*np*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(dev_uhelp, param.uhelp, np*np*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(dev_g_idata, param.g_idata, np*np*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(dev_g_odata, param.g_odata, np*sizeof(float), cudaMemcpyHostToDevice);
+
     iter = 0;
-  	 
     while(1) {
-        gpu_Heat<<<Grid,Block>>>(dev_u, dev_uhelp, dev_res, np); // Call the kernel
-        // cudaThreadSynchronize();  // wait for all threads to complete???
+        gpu_Heat<<<Grid,Block>>>(dev_u, dev_uhelp, dev_g_idata, np);
+        // cudaThreadSynchronize();
+        // cudaMemcpy(param.g_idata, dev_g_idata, np*np*sizeof(float), cudaMemcpyDeviceToHost);
+   		// FIXMEVORI: Figure out parameters. Result seems correct.
+   		gpu_reduction<<<np,np,np*sizeof(float)>>>(dev_g_idata, dev_g_odata);
+   		// cudaThreadSynchronize();
+   		cudaMemcpy(param.g_odata, dev_g_odata, np*sizeof(float), cudaMemcpyDeviceToHost);
 
-        // TODO: residual is computed on host, we need to get from GPU values computed in u and uhelp 
-        cudaMemcpy( res, dev_res, sizeof(float)*(np*np), cudaMemcpyDeviceToHost);
-	
-        //for(int i=0;i<np;i++) { printf("%.6f ", res[i*2]); }	  
-
-        gpu_ResidualReduction<<<np,np,np*sizeof(float)>>>(dev_res, dev_result);
-        //cudaThreadSynchronize();
-        cudaMemcpy( result, dev_result, sizeof(float)*np, cudaMemcpyDeviceToHost);
-
-        //cudaMemcpy( param.uhelp, dev_uhelp, sizeof(float)*(np*np), cudaMemcpyDeviceToHost);
-        //residual = cpu_residual(param.u, param.uhelp, np, np);
-
-        float * tmp = dev_u;
-        dev_u = dev_uhelp;
-        dev_uhelp = tmp;
-
-        // Adds the results of each block
+	   	float * tmp = dev_u;
+	   	dev_u = dev_uhelp;
+	   	dev_uhelp = tmp;
         iter++;
-        float sum =0.0;
-        for(int i=0;i<np;i++) {
-        		printf("Result[%d]=%.6f\n",i,result[i]);	
-                sum += result[i]; 		
-        }
-        residual = sum; 
-	
-        // solution good enough ?
-       if (residual < 0.00005) break;
 
+        residual = 0.0f;
+        for(int i = 0; i < np; ++i)
+        	residual+=param.g_odata[i];
+
+        // solution good enough ?
+        if (residual < 0.00005) break;
         // max. iteration reached ? (no limit with maxiter=0)
         if (iter>=param.maxiter) break;
     }
 
-    // TODO: get result matrix from GPU
-    cudaMemcpy(  param.u, dev_u, sizeof(float)*(np*np), cudaMemcpyDeviceToHost);
-  
-    // TODO: free memory used in GPU
-    cudaFree( dev_u ); 
-    cudaFree( dev_uhelp);
+    // VORI: get result matrix from GPU
+    cudaMemcpy(param.u, dev_u, np*np*sizeof(float), cudaMemcpyDeviceToHost);
 
-    cudaEventRecord( stop, 0 );     // instrument code to measue end time
-    cudaEventSynchronize( stop );
-    cudaEventElapsedTime( &elapsed_time_ms, start, stop );
-
-    fprintf(stdout, "\nTime on GPU in ms. = %f ", elapsed_time_ms);
+    // VORI: free memory used in GPU
+    cudaFree(dev_u);
+    cudaFree(dev_uhelp);
+   
+    cudaEventRecord( stop_gpu, 0 );     // instrument code to measue end time
+    cudaEventSynchronize( stop_gpu );
+    cudaEventElapsedTime( &elapsed_time_ms_gpu, start_gpu, stop_gpu );
+    
+    flop = iter * 11.0 * param.resolution * param.resolution;
+    fprintf(stdout, "\nTime on GPU in ms. = %f ", elapsed_time_ms_gpu);
     fprintf(stdout, "(%3.3f GFlop => %6.2f MFlop/s)\n", 
 	    flop/1000000000.0,
-	    flop/elapsed_time_ms/1000);
+	    flop/elapsed_time_ms_gpu/1000);
     fprintf(stdout, "Convergence to residual=%f: %d iterations\n", residual, iter);
 
-    cudaEventDestroy(start);
-    cudaEventDestroy(stop);
+    cudaEventDestroy(start_gpu);
+    cudaEventDestroy(stop_gpu);
 
     // for plot...
     coarsen( param.u, np, np,
@@ -327,7 +343,8 @@ int initialize( algoparam_t *param )
     (param->uvis)  = (float*)calloc( sizeof(float),
 				      (param->visres+2) *
 				      (param->visres+2) );
-  
+    (param->g_idata)    = (float*)calloc( sizeof(float),np*np );
+    (param->g_odata) = (float*)calloc( sizeof(float),np );
 
     if( !(param->u) || !(param->uhelp) || !(param->uvis) )
     {

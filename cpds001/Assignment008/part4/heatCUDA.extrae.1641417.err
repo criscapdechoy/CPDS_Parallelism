@@ -1,0 +1,5 @@
+EXTRAE/latest(29):ERROR:151: Module 'EXTRAE/latest' depends on one of the module(s) 'gcc/6.2.0'
+EXTRAE/latest(29):ERROR:102: Tcl command execution failed: prereq gcc/6.2.0
+
+ERROR: ld.so: object '/apps/CEPBATOOLS/extrae/2.3/bullmpi/64/lib/libcudatrace.so' from LD_PRELOAD cannot be preloaded: ignored.
+./heatCUDA: error while loading shared libraries: libcudart.so.4: cannot open shared object file: No such file or directory

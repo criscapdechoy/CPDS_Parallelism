@@ -1,0 +1,72 @@
+------------------------ID[0]------------------------
+IDth[0] working on rows 0 to 255
+ID[0] finished computing with residual value = 0.000050
+ID[0] Time: 5.870 ID[0] (9.049 GFlop => 1541.43 MFlop/s)
+ID[0] Convergence to residual=0.000050: 12552 iterations
+-----------------------------------------------------
+MPI Num Procs     : 1
+Iterations        : 25000
+Resolution        : 256
+Algorithm         : 2 (Gauss-Seidel)
+Num. Heat sources : 2
+   1: (0.00, 0.00) 1.00 2.50 
+   2: (0.50, 1.00) 1.00 2.50 
+Total time: 5.895 
+::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+------------------------ID[1]------------------------
+IDth[1] working on rows 128 to 255
+ID[1] finished computing with residual value = 0.000050
+ID[1] Time: 5.890 ID[1] (9.049 GFlop => 1536.41 MFlop/s)
+ID[1] Convergence to residual=0.000050: 12552 iterations
+-----------------------------------------------------
+------------------------ID[0]------------------------
+IDth[0] working on rows 0 to 127
+ID[0] finished computing with residual value = 0.000050
+ID[0] Time: 5.889 ID[0] (9.049 GFlop => 1536.42 MFlop/s)
+ID[0] Convergence to residual=0.000050: 12552 iterations
+-----------------------------------------------------
+MPI Num Procs     : 2
+Iterations        : 25000
+Resolution        : 256
+Algorithm         : 2 (Gauss-Seidel)
+Num. Heat sources : 2
+   1: (0.00, 0.00) 1.00 2.50 
+   2: (0.50, 1.00) 1.00 2.50 
+Total time: 5.908 
+::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+------------------------ID[3]------------------------
+IDth[3] working on rows 192 to 255
+ID[3] finished computing with residual value = 0.000050
+ID[3] Time: 5.886 ID[3] (9.049 GFlop => 1537.44 MFlop/s)
+ID[3] Convergence to residual=0.000050: 12552 iterations
+-----------------------------------------------------
+------------------------ID[2]------------------------
+IDth[2] working on rows 128 to 191
+ID[2] finished computing with residual value = 0.000050
+ID[2] Time: 5.885 ID[2] (9.049 GFlop => 1537.46 MFlop/s)
+ID[2] Convergence to residual=0.000050: 12552 iterations
+-----------------------------------------------------
+------------------------ID[1]------------------------
+IDth[1] working on rows 64 to 127
+ID[1] finished computing with residual value = 0.000050
+ID[1] Time: 5.886 ID[1] (9.049 GFlop => 1537.45 MFlop/s)
+ID[1] Convergence to residual=0.000050: 12552 iterations
+-----------------------------------------------------
+------------------------ID[0]------------------------
+IDth[0] working on rows 0 to 63
+ID[0] finished computing with residual value = 0.000050
+ID[0] Time: 5.886 ID[0] (9.049 GFlop => 1537.44 MFlop/s)
+ID[0] Convergence to residual=0.000050: 12552 iterations
+-----------------------------------------------------
+MPI Num Procs     : 4
+Iterations        : 25000
+Resolution        : 256
+Algorithm         : 2 (Gauss-Seidel)
+Num. Heat sources : 2
+   1: (0.00, 0.00) 1.00 2.50 
+   2: (0.50, 1.00) 1.00 2.50 
+Total time: 5.905 
+::::::::::::::::::::::::::::::::::::::::::::::::::::::
+

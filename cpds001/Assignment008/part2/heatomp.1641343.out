@@ -1,0 +1,54 @@
+Iterations        : 25000
+Resolution        : 256
+Algorithm         : 2 (Gauss-Seidel)
+Num. Heat sources : 2
+   1: (0.00, 0.00) 1.00 2.50 
+   2: (0.50, 1.00) 1.00 2.50 
+Time: 5.404 (9.049 GFlop => 1674.30 MFlop/s)
+Convergence to residual=0.000050: 12552 iterations
+Running with 4
+Iterations        : 25000
+Resolution        : 256
+Algorithm         : 2 (Gauss-Seidel)
+Num. Heat sources : 2
+   1: (0.00, 0.00) 1.00 2.50 
+   2: (0.50, 1.00) 1.00 2.50 
+Time: 4.128 (9.049 GFlop => 2192.16 MFlop/s)
+Convergence to residual=0.000050: 12552 iterations
+Running with 6
+Iterations        : 25000
+Resolution        : 256
+Algorithm         : 2 (Gauss-Seidel)
+Num. Heat sources : 2
+   1: (0.00, 0.00) 1.00 2.50 
+   2: (0.50, 1.00) 1.00 2.50 
+Time: 2.828 (9.049 GFlop => 3199.40 MFlop/s)
+Convergence to residual=0.000050: 12552 iterations
+Running with 8
+Iterations        : 25000
+Resolution        : 256
+Algorithm         : 2 (Gauss-Seidel)
+Num. Heat sources : 2
+   1: (0.00, 0.00) 1.00 2.50 
+   2: (0.50, 1.00) 1.00 2.50 
+Time: 1.624 (9.049 GFlop => 5571.44 MFlop/s)
+Convergence to residual=0.000050: 12552 iterations
+Running with 10
+Iterations        : 25000
+Resolution        : 256
+Algorithm         : 2 (Gauss-Seidel)
+Num. Heat sources : 2
+   1: (0.00, 0.00) 1.00 2.50 
+   2: (0.50, 1.00) 1.00 2.50 
+Time: 2.733 (9.049 GFlop => 3311.03 MFlop/s)
+Convergence to residual=0.000050: 12552 iterations
+Running with 12
+Iterations        : 25000
+Resolution        : 256
+Algorithm         : 2 (Gauss-Seidel)
+Num. Heat sources : 2
+   1: (0.00, 0.00) 1.00 2.50 
+   2: (0.50, 1.00) 1.00 2.50 
+Time: 5.618 (9.049 GFlop => 1610.72 MFlop/s)
+Convergence to residual=0.000050: 12552 iterations
+Running with 14

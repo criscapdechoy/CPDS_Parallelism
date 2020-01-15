@@ -1,0 +1,54 @@
+Iterations        : 25000
+Resolution        : 256
+Algorithm         : 1 (Red-Black)
+Num. Heat sources : 2
+   1: (0.00, 0.00) 1.00 2.50 
+   2: (0.50, 1.00) 1.00 2.50 
+Time: 3.073 (9.049 GFlop => 2945.06 MFlop/s)
+Convergence to residual=0.000050: 12553 iterations
+Running with 4
+Iterations        : 25000
+Resolution        : 256
+Algorithm         : 1 (Red-Black)
+Num. Heat sources : 2
+   1: (0.00, 0.00) 1.00 2.50 
+   2: (0.50, 1.00) 1.00 2.50 
+Time: 1.565 (9.049 GFlop => 5781.20 MFlop/s)
+Convergence to residual=0.000050: 12553 iterations
+Running with 6
+Iterations        : 25000
+Resolution        : 256
+Algorithm         : 1 (Red-Black)
+Num. Heat sources : 2
+   1: (0.00, 0.00) 1.00 2.50 
+   2: (0.50, 1.00) 1.00 2.50 
+Time: 1.610 (9.049 GFlop => 5621.94 MFlop/s)
+Convergence to residual=0.000050: 12553 iterations
+Running with 8
+Iterations        : 25000
+Resolution        : 256
+Algorithm         : 1 (Red-Black)
+Num. Heat sources : 2
+   1: (0.00, 0.00) 1.00 2.50 
+   2: (0.50, 1.00) 1.00 2.50 
+Time: 0.905 (9.049 GFlop => 10001.09 MFlop/s)
+Convergence to residual=0.000050: 12553 iterations
+Running with 10
+Iterations        : 25000
+Resolution        : 256
+Algorithm         : 1 (Red-Black)
+Num. Heat sources : 2
+   1: (0.00, 0.00) 1.00 2.50 
+   2: (0.50, 1.00) 1.00 2.50 
+Time: 1.062 (9.049 GFlop => 8520.90 MFlop/s)
+Convergence to residual=0.000050: 12553 iterations
+Running with 12
+Iterations        : 25000
+Resolution        : 256
+Algorithm         : 1 (Red-Black)
+Num. Heat sources : 2
+   1: (0.00, 0.00) 1.00 2.50 
+   2: (0.50, 1.00) 1.00 2.50 
+Time: 1.449 (9.049 GFlop => 6246.84 MFlop/s)
+Convergence to residual=0.000050: 12553 iterations
+Running with 14
